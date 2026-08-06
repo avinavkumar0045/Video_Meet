@@ -9,7 +9,7 @@ reqd > Home -> Login  <-> Homme -> Meeting
 >npm i cors --save
 
 > Mongodb : create new  , in the IP address give the one if you have , if dontHave use(0.0.0.0/0) for testing , ki koi kahi se bhi access kr sake 
-then create , it then do to "clusters" in Database in Left side and copy the url (NOTES MannKiBaat)
+then create , it then do to "clusters" in Database in Left side and copy the url. Keep the database URL in BACKEND/.env as MONGODB_URI and never commit it.
 
 > "type": "module", ( in package.json)(taaki aap import export kar sako)
 >  "scripts": {

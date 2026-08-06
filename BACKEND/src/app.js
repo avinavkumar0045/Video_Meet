@@ -3,6 +3,7 @@ import {createServer} from "node:http";
 import {Server} from "socket.io";
 import mongoose from "mongoose";
 import cors from "cors";
+import "dotenv/config";
 import { connectToSocket } from './controllers/SocketManager.js';
 import userRoutes from "./routes/users.routes.js";
 
@@ -45,11 +46,15 @@ app.use("/api/v1/users", userRoutes); // this two if you are rolling a api versi
 
 
 const start = async() =>{
-    const connectionDB = await mongoose.connect("mongodb+srv://avinavkumar0045:MannKiBaat@cluster0.zcwzttl.mongodb.net/");
+    if (!process.env.MONGODB_URI) {
+        throw new Error("MONGODB_URI is required");
+    }
+
+    const connectionDB = await mongoose.connect(process.env.MONGODB_URI);
 
     console.log(`MONGO Connected DB host : ${connectionDB.connection.host}`);
     server.listen(app.get("port") , () =>{
-        console.log("LISTINING ON PORT 8000")
+        console.log(`LISTINING ON PORT ${app.get("port")}`)
     });
 
 }
