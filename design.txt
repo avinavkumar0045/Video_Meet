@@ -1,0 +1,12 @@
+> Flow chart
+> data base(Mongo Db)
+> tech stack (Bcrypt , Crypto , ExpressJs , Socket io) NetJs Fastify
+instead od Socketio we can use Long Polling which is technique where the client makes the request to the server , and server holds the response till new data is available 
+effectively keeping the connection open longer to reduce latency for real time updates
+
+> frontend tech stack (Material UI , WebRTC , REACT , AXIOS , CSS, JS)
+
+> CORS (Cross Origin Resource Sharing)
+
+node src/app.js  // mobile network 
+npm run dev 

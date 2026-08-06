@@ -1,0 +1,44 @@
+reqd > Home -> Login  <-> Homme -> Meeting 
+           npm run dev
+> npm init                       
+> npm install express mongoose
+> npm i nodemon ( baar baar refresh naa karna pade)
+> npm i bcrypt (for password hashing)
+>npm i http-status ( for not remembering the http / 400 for error , not found)
+> npm install socket.io (in backend ) for frontend we will need socketio client
+>npm i cors --save
+
+> Mongodb : create new  , in the IP address give the one if you have , if dontHave use(0.0.0.0/0) for testing , ki koi kahi se bhi access kr sake 
+then create , it then do to "clusters" in Database in Left side and copy the url (NOTES MannKiBaat)
+
+> "type": "module", ( in package.json)(taaki aap import export kar sako)
+>  "scripts": {
+    "dev": "nodemon src/app.js",
+    "start": "node src/app.js",
+    "prod":"pm2 src/app.js"
+  }, in nodemon 
+> then set up the connection , 
+> we will only locally store the token(as cookie) and the rest we will fetch from the database,
+> npm intall crypto
+
+> after writing the socketManager.js we move to frontend
+-----------------------------
+> In frontend u should know the JS and can u copy it through the CSS or not 
+> npm create vite 
+> ProjectName 
+> framework : react
+>variant : JS
+> cd ProjectName
+> npm install
+> npm run dev
+> we will do CSS -> JSX && will use premade material UI and modify it
+> npm install react-router-dom
+> Creating Landing page 
+> npm install @mui/material @emotion/react @emotion/styled 
+> npm install axios http-status
+> npm install socket.io-client
+> copied landing page from material-ui github
+>npm install @mui/icons-material
+
+> Stun servers are the light weight servers running on the public internet which return the IP address of the request's devices
+> reading about navigator 
