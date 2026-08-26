@@ -13,8 +13,8 @@ import MicOffIcon from '@mui/icons-material/MicOff'
 import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare'
 import ChatIcon from '@mui/icons-material/Chat';
+import VideocamOffRoundedIcon from '@mui/icons-material/VideocamOffRounded';
 import { useNavigate } from 'react-router-dom';
-
 
 const server_url = "http://localhost:8000";
 
@@ -43,6 +43,7 @@ export default function VideoMeetComponent() {
     let[screen, setScreen] = useState(); // sereensharing on off
 
     let [showModal  , setModal] = useState(true); // some pop us and all
+    let showModalRef = useRef(true); /* Added: Ref to track modal state accurately inside socket listeners */
 
     let [screenAvailable , setScreenAvailable] = useState();
 
@@ -50,11 +51,15 @@ export default function VideoMeetComponent() {
 
     let[message , setMessage] = useState(""); /// jo likhenge
 
-    let[newMessages , setNewMessages] = useState(4) ; // jo popup wale
+    /* Changed: Replaced hardcoded message counter with a simple boolean unread dot */
+    let[hasUnread , setHasUnread] = useState(false);
 
     let[askForUsername , setAskForUsername] = useState(true);
 
     let[username , setUsername] = useState("");
+
+    let [remoteUsers, setRemoteUsers] = useState({});
+    let [remoteCameraStates, setRemoteCameraStates] = useState({});
 
     const videoRef  = useRef([]);
 
@@ -237,11 +242,11 @@ export default function VideoMeetComponent() {
             {sender: sender, data :data}
         ])       
         if(socketIdSender !== socketIdRef.current){
-            setNewMessages((prevMessages)=> prevMessages+ 1)
-
-
+            /* Changed: Only show the unread dot if the chat panel is currently closed */
+            if(!showModalRef.current) {
+                setHasUnread(true);
+            }
         }
-
     }
 
     let connectToSocketServer = () =>{
@@ -249,17 +254,23 @@ export default function VideoMeetComponent() {
         socketRef.current.on('signal',gotMessageFromServer);
 
         socketRef.current.on("connect", ()=>{
-            socketRef.current.emit("join-call", window.location.href)
+            socketRef.current.emit("join-call", window.location.href, username, videoAvailable)
             socketIdRef.current = socketRef.current.id
 
             socketRef.current.on("chat-message",addMessage)
 
             socketRef.current.on("user-left", (id)=>{
                 setVideos((videos)=>videos.filter((video)=>video.socketId !== id))
-
             })
 
-            socketRef.current.on("user-joined", (id , clients)=>{
+            socketRef.current.on("update-camera-state", (id, isVideoOn) => {
+                setRemoteCameraStates(prev => ({ ...prev, [id]: isVideoOn }));
+            });
+
+            socketRef.current.on("user-joined", (id , clients, usersDict, cameraDict)=>{
+                if(usersDict) setRemoteUsers(usersDict);
+                if(cameraDict) setRemoteCameraStates(cameraDict);
+
                 clients.forEach((socketListId)=>{
 
                     connections[socketListId] = new RTCPeerConnection(peerConfigConnections) // for connection
@@ -354,7 +365,9 @@ export default function VideoMeetComponent() {
     }
 
     let handleVideo = () =>{
-        setVideo(!video);
+        const newState = !video;
+        setVideo(newState);
+        socketRef.current.emit("camera-toggle", newState);
     }
 
     let handleAudio = ()=>{
@@ -423,7 +436,10 @@ export default function VideoMeetComponent() {
     }
 
     let handleChat = () =>{
-        setModal(!showModal);
+        let newState = !showModal;
+        setModal(newState);
+        showModalRef.current = newState; /* Changed: Keep ref in sync for the socket listener */
+        if(newState) setHasUnread(false); /* Changed: Clear the unread dot when opening chat */
     }
 
     let sendMessage = () =>{
@@ -445,23 +461,38 @@ export default function VideoMeetComponent() {
     return (
         <div>
             {askForUsername === true? 
-              <div>
-                <h2 className='water'>Enter into Lobby</h2>
-                <TextField id="outlined-basic" label="Username" value={username} onChange={e => setUsername(e.target.value)} variant="outlined" />
-                <Button variant="contained" onClick={connect}>Connect</Button>
-
-                <div>
-                    <video ref={localVideoRef} autoPlay muted ></video>
+              <div className={styles.lobbyContainer}>
+                <div className={styles.lobbyBox}>
+                    <div>
+                        <video className={styles.lobbyVideoPreview} ref={localVideoRef} autoPlay muted></video>
+                    </div>
+                    <div className={styles.lobbyForm}>
+                        <h2>Enter into Lobby</h2>
+                        <TextField 
+                            id="outlined-basic" 
+                            label="Username" 
+                            value={username} 
+                            onChange={e => setUsername(e.target.value)} 
+                            variant="outlined" 
+                            sx={{ 
+                                "& .MuiOutlinedInput-root": {
+                                    "& fieldset": { borderColor: "rgba(255,255,255,0.5)" },
+                                    "&:hover fieldset": { borderColor: "white" },
+                                },
+                                "& .MuiInputBase-input": { color: "white" },
+                                "& .MuiInputLabel-root": { color: "rgba(255,255,255,0.7)" }
+                            }}
+                        />
+                        <Button variant="contained" size="large" onClick={connect}>Connect</Button>
+                    </div>
                 </div>
-
-                </div> : 
+              </div> : 
                   
                   <div className={styles.meetVideoContainer}>
 
 
                     {showModal ? <div className={styles.chatRoom}>
-                        
-                        <div className='styles.chatContainer'> 
+                        <div className={styles.chatContainer}> 
                         <h1>Chat</h1>
 
                         <div className={styles.chattingDisplay}>
@@ -477,10 +508,19 @@ export default function VideoMeetComponent() {
                         </div>
 
 
-
                         <div className={styles.chattingArea}>
                           {/* {message} */}
-                          <TextField value= {message} onChange={(e)=> setMessage(e.target.value)} id="outlined-basic" label="Enter your chat" variant="outlined" />
+                          <TextField value={message} onChange={(e)=> setMessage(e.target.value)} id="outlined-basic" label="Enter your chat" variant="outlined" 
+                          sx={{ 
+                              flexGrow: 1, 
+                              "& .MuiOutlinedInput-root": {
+                                  "& fieldset": { borderColor: "rgba(255,255,255,0.5)" },
+                                  "&:hover fieldset": { borderColor: "white" },
+                              },
+                              "& .MuiInputBase-input": { color: "white" },
+                              "& .MuiInputLabel-root": { color: "rgba(255,255,255,0.7)" }
+                          }} 
+                          />
                           <Button variant='contained' onClick={sendMessage}>Send</Button>
                         </div>
 
@@ -504,7 +544,7 @@ export default function VideoMeetComponent() {
                             {screen === true ? <ScreenShareIcon></ScreenShareIcon> : <StopScreenShareIcon></StopScreenShareIcon>}
                         </IconButton> : <></>}
 
-                        <Badge badgeContent={newMessages} max={999} color="secondary">
+                        <Badge color="error" variant="dot" invisible={!hasUnread}>
                             <IconButton onClick={handleChat} style={{ color : "white"}}>
                                 <ChatIcon/>
                             </IconButton>
@@ -512,24 +552,28 @@ export default function VideoMeetComponent() {
 
                     </div>
 
-                    <video className={styles.meetUserVideo} ref={localVideoRef} autoPlay muted></video>
+                    <div className={styles.conferenceView}>
+                        
+                        <div className={styles.videoWrapper}>
+                            <video ref={localVideoRef} autoPlay muted></video>
+                            <div className={styles.nameOverlay}>{username} (You)</div>
+                            {!video && <div className={styles.cameraOffOverlay}><VideocamOffRoundedIcon /></div>}
+                        </div>
 
-                    <div className={styles.conferenceView} >
-                        {videos.map((video)=>(
-                                <div key={video.socketId}>
-                                    {/* <h2>{video.socketId}</h2> */}
+                        {videos.map((videoObj)=>(
+                                <div key={videoObj.socketId} className={styles.videoWrapper}>
                                     <video 
-                                        data-socket = {video.socketId}
+                                        data-socket = {videoObj.socketId}
                                         ref={ref=>{
-                                            if(ref && video.stream){
-                                                ref.srcObject = video.stream;
+                                            if(ref && videoObj.stream){
+                                                ref.srcObject = videoObj.stream;
                                             }
                                         }}
                                         autoPlay
-                                        
                                         >
-
                                     </video>
+                                    <div className={styles.nameOverlay}>{remoteUsers[videoObj.socketId] || videoObj.socketId}</div>
+                                    {remoteCameraStates[videoObj.socketId] === false && <div className={styles.cameraOffOverlay}><VideocamOffRoundedIcon /></div>}
                                 </div>
                         ))}
                     </div>

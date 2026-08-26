@@ -5,6 +5,8 @@ import { Server } from "socket.io";
 let connections = {}
 let messages = {}
 let timeOnline  ={}
+let users = {} /* Added: Store socket.id to username mapping */
+let cameraStates = {} /* Added: Store socket.id to camera state mapping */
 
 export const connectToSocket = (server) =>{
     const io = new Server(server ,{  // not to do this cors section in production , just in testing, cause server from anywhere
@@ -22,7 +24,10 @@ export const connectToSocket = (server) =>{
 
         console.log("SOMETHING CONNECTED");
 
-        socket.on("join-call",(path)=>{
+        socket.on("join-call",(path, username, initialVideoState)=>{ /* Added: Accept username and initial video state */
+            
+            users[socket.id] = username || "Guest"; /* Added: Save username */
+            cameraStates[socket.id] = initialVideoState; /* Added: Save initial camera state */
 
             if(connections[path] === undefined){
                 connections[path] = []
@@ -32,7 +37,8 @@ export const connectToSocket = (server) =>{
             timeOnline[socket.id] = new Date();
 
             for(let a = 0; a< connections[path].length ; a++){
-                io.to(connections[path][a]).emit("user-joined" , socket.id, connections[path]);
+                /* Added: Broadcast users and cameraStates objects so everyone knows the names and video statuses */
+                io.to(connections[path][a]).emit("user-joined" , socket.id, connections[path], users, cameraStates);
             }
 
             if (messages[path] !== undefined){
@@ -40,6 +46,22 @@ export const connectToSocket = (server) =>{
                     io.to(socket.id).emit("chat-message", messages[path][a]['data'],
                         messages[path][a]['sender'], messages[path][a]['socket-id-sender'])
                 }
+            }
+        })
+
+        socket.on("camera-toggle", (isVideoOn) => { /* Added: Handle remote camera toggling */
+            cameraStates[socket.id] = isVideoOn;
+            
+            const[matchingRoom , found] = Object.entries(connections)
+                .reduce(([room , isFound], [roomKey , roomValue])=>{
+                if(!isFound && roomValue.includes(socket.id)){ return [roomKey , true]; }
+                return [room , isFound];
+            } , ['', false]);
+
+            if(found === true){
+                connections[matchingRoom].forEach((elem)=> {
+                    io.to(elem).emit("update-camera-state", socket.id, isVideoOn);
+                })
             }
         })
 
