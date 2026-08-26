@@ -13,8 +13,9 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { AuthContext } from '../contexts/AuthContext.jsx';
-import { Snackbar } from '@mui/material';
-
+import { Snackbar, InputAdornment, IconButton } from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 
 // TODO remove, this demo shouldn't need to reset the theme.
@@ -30,6 +31,7 @@ export default function Authentication() {
     const [name, setName] = React.useState();
     const [error, setError] = React.useState();
     const [message, setMessage] = React.useState();
+    const [showPassword, setShowPassword] = React.useState(false);
 
 
     const [formState, setFormState] = React.useState(0);
@@ -79,7 +81,7 @@ export default function Authentication() {
 
 
     return (
-        <ThemeProvider theme={defaultTheme}>
+        <>
             <Grid container component="main" sx={{ height: '100vh' }}>
                 <CssBaseline />
                 <Grid
@@ -88,7 +90,7 @@ export default function Authentication() {
                     sm={4}
                     md={7}
                     sx={{
-                        backgroundImage: 'url(/funny.jpg)',
+                        backgroundImage: 'url(/funny.png)',
                         backgroundRepeat: 'no-repeat',
                         backgroundColor: (t) =>
                             t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900],
@@ -153,10 +155,22 @@ export default function Authentication() {
                                 name="password"
                                 label="Password"
                                 value={password}
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 onChange={(e) => setPassword(e.target.value)}
-
                                 id="password"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton
+                                                aria-label="toggle password visibility"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                edge="end"
+                                            >
+                                                {showPassword ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    )
+                                }}
                             />
 
                             <p style={{ color: "red" }}>{error}</p>
@@ -184,6 +198,6 @@ export default function Authentication() {
                 message={message}
             />
 
-        </ThemeProvider>
+        </>
     );
 }

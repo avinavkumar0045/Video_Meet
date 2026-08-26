@@ -11,7 +11,7 @@ export default function LandingPage() {
         {/* navbar */}
         <nav>
             <div className='navHeader'>
-                <h2>
+                <h2 onClick={() => router("/")} style={{ cursor: "pointer" }}>
                     <span style={{color:'#FF9933'}}>Mann </span>
                     <span style={{color:'#FFFFFF'}}>Ki </span> 
                     <span style={{color:'#138808'}}>Baat</span>  

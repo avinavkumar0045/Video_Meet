@@ -1,62 +1,198 @@
-.water{
-    color:red;
+.lobbyContainer {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #121212;
+    color: white;
 }
+
+.lobbyBox {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 40px;
+    background: rgba(30, 30, 30, 0.95);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    align-items: center;
+    justify-content: center;
+}
+
+.lobbyVideoPreview {
+    width: 100%;
+    max-width: 450px;
+    height: auto;
+    aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.lobbyForm {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 300px;
+}
+
+.lobbyForm h2 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
 .meetVideoContainer{
     position: relative;
     height : 100vh;
-    background: rgb(68, 42, 133);
-}
-
-.meetUserVideo { 
-    position: absolute;
-    bottom : 10vh;
-    height : 20vh;
-    width : auto;
-    left : 0;
-    border-radius :20px;
+    background: #121212;
+    overflow: hidden;
+    display: flex; /* Makes the main container a flexbox */
+    flex-direction: row-reverse; /* Puts chat on the right, grid on the left without changing HTML order */
 }
 
 .buttonContainers {
     position : absolute;
-    width : 100vw;
-    bottom : 0;
+    width : auto;
+    bottom : 30px;
+    left: 50%;
+    transform: translateX(-50%);
     text-align: center;
+    background: rgba(30, 30, 30, 0.85);
+    backdrop-filter: blur(12px);
+    padding: 10px 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    z-index: 20;
 }
 .buttonContainers svg {
-    font-size: 3.3rem;
-
+    font-size: 2.2rem;
 }
 
 .conferenceView{
-    display: flex;
-    padding :10px;
-    gap: 10px;
+    display: grid;
+    padding: 20px;
+    gap: 20px;
+    height: 100vh;
+    flex: 1; /* Tells the grid to take up exactly the remaining space next to the chat */
+    padding-bottom: 120px; /* Space for the control bar */
+    box-sizing: border-box;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    align-content: center;
+    justify-content: center;
+    transition: flex 0.3s ease; /* Smoothly transitions layout when chat opens */
 }
 
-.conferenceView  video{
-    width : 40vw;
-    height : 20vh;
-    min-width: 30vw;
-    border-radius: 10px;
+.videoWrapper {
+    position: relative; /* Added: Ensures absolute overlays stick inside this wrapper */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-height: 80vh; 
+}
 
+.videoWrapper video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    background: #000;
+}
+
+.nameOverlay { /* Added: Styles for the Google Meet style name pill */
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    background: rgba(0, 0, 0, 0.65);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    z-index: 5;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.cameraOffOverlay { /* Added: Styles for the black background + icon when camera is off */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #1e1e1e; /* Deep dark gray instead of pure black */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px; /* Match video border-radius */
+    z-index: 4;
+}
+
+.cameraOffOverlay svg { /* Added: Styles the VideocamOff icon inside the overlay */
+    font-size: 4.5rem;
+    color: #fff;
+    opacity: 0.5;
 }
 
 .chatRoom{
-    position: absolute;
-    height :90vh;
+    position: relative; /* Returns chat to normal document flow so it never overlaps the grid */
+    height : 90vh;
+    margin: 5vh 20px; /* Floats it nicely with space around it */
     width : 30vw;
-    right : 0;
-    background: bisque ;
-    border-radius: 10px;
-    bottom : 10vh;
+    min-width: 300px;
+    background: rgba(36, 36, 36, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 15px;
     padding-inline: 20px;
+    z-index: 15;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+}
+
+.chatRoom h1 {
+    font-size: 1.5rem;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 10px;
 }
 
 .chatContainer{
     position: relative;
-    heigth : 100%;
+    height : 100%;
+    display: flex;
+    flex-direction: column;
 }
+
+.chattingDisplay {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 70px; /* space for input */
+}
+
+.chattingDisplay p {
+    margin: 5px 0;
+}
+
 .chattingArea {
     position: absolute;
-    bottom : 0;
+    bottom : 20px;
+    width: 100%;
+    left: 0;
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }

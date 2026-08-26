@@ -18,13 +18,20 @@ import { AuthContext } from '../contexts/AuthContext';
   let handleJoinVideoCall = async()=>{
     await addToUserHistory(meetingCode)
     navigate(`/${meetingCode}`)
-
   }
+
+  let handleCreateVideoCall = async()=>{
+    const newCode = Math.random().toString(36).substring(2, 7);
+    await addToUserHistory(newCode);
+    navigate(`/${newCode}`);
+  }
+
   return (
     <>
            <div className='navBar'>
               <div style={{display :"flex ",alignItems: "center" }}>
-                <h2>Mann Ki Baat</h2>
+                {/* Changed: Made the branding clickable to navigate home */}
+                <h2 onClick={() => navigate("/home")} style={{ cursor: "pointer" }}>Mann Ki Baat</h2>
               </div>
 
               <div style={{display:"flex" , alignItems: "center"}}>
@@ -53,13 +60,13 @@ import { AuthContext } from '../contexts/AuthContext';
                 <div style={{display:'flex', gap:"10px"}}>
                   <TextField onChange={e => setMeetingCode(e.target.value)} id="outlined-basic" label="Meeting Code" variant="outlined" />
                   <Button onClick={handleJoinVideoCall} variant='contained'>Join</Button>
-
+                  <Button onClick={handleCreateVideoCall} variant='outlined'>Start Instant Meeting</Button>
                 </div>
               </div>
             </div>
 
-            <div className="rigthPanel">
-               <img srcSet='../public/logo3.png' alt="" />
+            <div className="rightPanel">
+               <img src='/logo3.png' alt="Logo" />
             </div>
            </div>
     </>
