@@ -1,0 +1,128 @@
+<!-- This file is used to collect normalized hand landmarks via webcam and save them as a JSON dataset for offline ML training. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gesture Data Collector</title>
+    <!-- MediaPipe Tasks Vision -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" crossorigin="anonymous"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #121212; color: white; }
+        .container { display: flex; gap: 20px; }
+        video { border: 2px solid #333; border-radius: 8px; transform: scaleX(-1); }
+        .controls { display: flex; flex-direction: column; gap: 15px; width: 300px; }
+        button, select { padding: 10px; font-size: 16px; cursor: pointer; border-radius: 5px; border: none; }
+        .record-btn { background: #d32f2f; color: white; font-weight: bold; }
+        .save-btn { background: #388e3c; color: white; font-weight: bold; }
+        .status { margin-top: 10px; font-weight: bold; color: #ffeb3b; }
+    </style>
+</head>
+<body>
+    <h1>ML Data Collector</h1>
+    <div class="container">
+        <div>
+            <video id="video" width="640" height="480" autoplay playsinline></video>
+        </div>
+        <div class="controls">
+            <label>Select Gesture to Record:</label>
+            <select id="labelSelect">
+                <option value="hello">Hello</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+                <option value="thank_you">Thank You</option>
+                <option value="help">Help</option>
+                <option value="stop">Stop</option>
+                <option value="okay">Okay</option>
+                <option value="sorry">Sorry</option>
+            </select>
+            
+            <button id="recordBtn" class="record-btn">Hold to Record</button>
+            <div class="status" id="status">Frames Recorded: 0</div>
+            
+            <hr style="width: 100%; border: 1px solid #444;">
+            <button id="saveBtn" class="save-btn">Download Dataset</button>
+        </div>
+    </div>
+
+    <script type="module">
+        const { HandLandmarker, FilesetResolver } = window;
+        
+        let handLandmarker = undefined;
+        let runningMode = "VIDEO";
+        let webcamRunning = false;
+        let isRecording = false;
+        
+        const video = document.getElementById("video");
+        const recordBtn = document.getElementById("recordBtn");
+        const saveBtn = document.getElementById("saveBtn");
+        const labelSelect = document.getElementById("labelSelect");
+        const statusEl = document.getElementById("status");
+
+        let dataset = [];
+
+        // Normalization utility (copied from landmarkPreprocess.js)
+        const preprocessLandmarks = (landmarks) => {
+            const wrist = landmarks[0];
+            let normalized = landmarks.map(lm => ({ x: lm.x - wrist.x, y: lm.y - wrist.y, z: lm.z - wrist.z }));
+            let maxVal = 0;
+            normalized.forEach(lm => { maxVal = Math.max(maxVal, Math.abs(lm.x), Math.abs(lm.y), Math.abs(lm.z)); });
+            if (maxVal === 0) maxVal = 1;
+            const flattened = [];
+            normalized.forEach(lm => { flattened.push(lm.x / maxVal, lm.y / maxVal, lm.z / maxVal); });
+            return flattened;
+        };
+
+        // Initialize MediaPipe
+        async function initializeMediaPipe() {
+            const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
+            handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                baseOptions: {
+                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+                    delegate: "GPU"
+                },
+                runningMode: runningMode,
+                numHands: 1
+            });
+            console.log("MediaPipe initialized");
+            startCamera();
+        }
+
+        async function startCamera() {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.addEventListener("loadeddata", predictWebcam);
+        }
+
+        let lastVideoTime = -1;
+        async function predictWebcam() {
+            if (video.currentTime !== lastVideoTime) {
+                lastVideoTime = video.currentTime;
+                const results = handLandmarker.detectForVideo(video, performance.now());
+                
+                if (results.landmarks && results.landmarks.length > 0) {
+                    if (isRecording) {
+                        const features = preprocessLandmarks(results.landmarks[0]);
+                        dataset.push({ label: labelSelect.value, features: features });
+                        statusEl.innerText = `Frames Recorded: ${dataset.length}`;
+                    }
+                }
+            }
+            window.requestAnimationFrame(predictWebcam);
+        }
+
+        recordBtn.addEventListener("mousedown", () => { isRecording = true; recordBtn.innerText = "Recording..."; });
+        recordBtn.addEventListener("mouseup", () => { isRecording = false; recordBtn.innerText = "Hold to Record"; });
+        recordBtn.addEventListener("mouseleave", () => { isRecording = false; recordBtn.innerText = "Hold to Record"; });
+
+        saveBtn.addEventListener("click", () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataset));
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "gesture_dataset.json");
+            dlAnchorElem.click();
+        });
+
+        initializeMediaPipe();
+    </script>
+</body>
+</html>
