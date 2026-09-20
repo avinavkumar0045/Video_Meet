@@ -1,6 +1,6 @@
 /* This script trains a lightweight TensorFlow.js Dense Neural Network on the collected gesture dataset and exports the model.json. */
 const fs = require('fs');
-const tf = require('@tensorflow/tfjs-node');
+const tf = require('@tensorflow/tfjs'); // Switched to pure JS version to fix path bugs
 
 async function trainModel() {
     console.log("Loading dataset...");
@@ -45,9 +45,32 @@ async function trainModel() {
     });
 
     console.log("Training complete. Exporting model...");
-    await model.save('file://../FRONTEND/public/model');
+    
+    // Custom save handler because pure tfjs doesn't have the file:// scheme
+    await model.save(tf.io.withSaveHandler(async (artifacts) => {
+        const modelDir = '../FRONTEND/public/model';
+        
+        // Save model.json
+        const modelJSON = {
+            format: artifacts.format,
+            generatedBy: artifacts.generatedBy,
+            convertedBy: artifacts.convertedBy,
+            modelTopology: artifacts.modelTopology,
+            weightsManifest: [{
+                paths: ['model.weights.bin'],
+                weights: artifacts.weightSpecs
+            }]
+        };
+        fs.writeFileSync(`${modelDir}/model.json`, JSON.stringify(modelJSON));
+        
+        // Save model.weights.bin
+        fs.writeFileSync(`${modelDir}/model.weights.bin`, Buffer.from(artifacts.weightData));
+        
+        return { modelArtifactsInfo: { dateSaved: new Date(), modelTopologyType: 'JSON' } };
+    }));
+    
     console.log("Model saved to FRONTEND/public/model!");
 }
 
-// Uncomment to run when dataset is ready
-// trainModel();
+// Run the training script
+trainModel();

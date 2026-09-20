@@ -1,0 +1,16 @@
+{
+  "name": "ml_pipeline",
+  "version": "1.0.0",
+  "description": "",
+  "main": "train_model.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0"
+  }
+}
