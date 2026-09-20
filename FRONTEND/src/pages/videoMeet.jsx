@@ -14,7 +14,9 @@ import ScreenShareIcon from '@mui/icons-material/ScreenShare';
 import StopScreenShareIcon from '@mui/icons-material/StopScreenShare'
 import ChatIcon from '@mui/icons-material/Chat';
 import VideocamOffRoundedIcon from '@mui/icons-material/VideocamOffRounded';
+import PanToolIcon from '@mui/icons-material/PanTool';
 import { useNavigate } from 'react-router-dom';
+import { SignRecognizer } from '../utils/signRecognizer.js';
 
 const server_url = "http://localhost:8000";
 
@@ -60,6 +62,11 @@ export default function VideoMeetComponent() {
 
     let [remoteUsers, setRemoteUsers] = useState({});
     let [remoteCameraStates, setRemoteCameraStates] = useState({});
+
+    /* AI Sign Language Feature state */
+    let [aiEnabled, setAiEnabled] = useState(false);
+    let [detectedGesture, setDetectedGesture] = useState("");
+    const recognizerRef = useRef(null);
 
     const videoRef  = useRef([]);
 
@@ -447,6 +454,29 @@ export default function VideoMeetComponent() {
         setMessage("");
     }
 
+    /* AI Sign Language Toggle: initializes SignRecognizer on first use, starts/stops prediction loop */
+    let handleAiToggle = async () => {
+        if (!aiEnabled) {
+            if (!recognizerRef.current) {
+                recognizerRef.current = new SignRecognizer((gesture) => {
+                    setDetectedGesture(gesture);
+                    // Auto-clear the overlay after 3 seconds
+                    if (window.gestureTimeout) clearTimeout(window.gestureTimeout);
+                    window.gestureTimeout = setTimeout(() => setDetectedGesture(""), 3000);
+                    // Broadcast to the meeting chat as an AI sign message
+                    socketRef.current.emit("chat-message", `[AI Sign]: ${gesture.toUpperCase()}`, username);
+                });
+                await recognizerRef.current.initialize();
+            }
+            recognizerRef.current.start(localVideoRef.current);
+            setAiEnabled(true);
+        } else {
+            if (recognizerRef.current) recognizerRef.current.stop();
+            setAiEnabled(false);
+            setDetectedGesture("");
+        }
+    };
+
     let handleEndCall = ()=>{
         try{
             let tracks =  localVideoRef.current.srcObject.getTracks();
@@ -538,6 +568,9 @@ export default function VideoMeetComponent() {
                         <IconButton  onClick={handleAudio} style={{ color: "white"}}>
                             {(audio === true)? <MicIcon/> : <MicOffIcon/>}
                         </IconButton>
+                        <IconButton onClick={handleAiToggle} style={{ color: aiEnabled ? "#4caf50" : "white"}} title="Toggle Sign Language AI">
+                            <PanToolIcon />
+                        </IconButton>
 
                         {screenAvailable === true ? // if screen share
                         <IconButton onClick={handleScreen} style={{ color: "white"}}>
@@ -557,6 +590,7 @@ export default function VideoMeetComponent() {
                         <div className={styles.videoWrapper}>
                             <video ref={localVideoRef} autoPlay muted></video>
                             <div className={styles.nameOverlay}>{username} (You)</div>
+                            {detectedGesture && <div className={styles.aiOverlay}>{detectedGesture.toUpperCase()}</div>}
                             {!video && <div className={styles.cameraOffOverlay}><VideocamOffRoundedIcon /></div>}
                         </div>
 

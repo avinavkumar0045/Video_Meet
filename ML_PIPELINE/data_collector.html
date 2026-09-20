@@ -4,8 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Gesture Data Collector</title>
-    <!-- MediaPipe Tasks Vision -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" crossorigin="anonymous"></script>
     <style>
         body { font-family: sans-serif; padding: 20px; background: #121212; color: white; }
         .container { display: flex; gap: 20px; }
@@ -36,7 +34,7 @@
                 <option value="sorry">Sorry</option>
             </select>
             
-            <button id="recordBtn" class="record-btn">Hold to Record</button>
+            <button id="recordBtn" class="record-btn" style="background: #1976d2;">Start Recording</button>
             <div class="status" id="status">Frames Recorded: 0</div>
             
             <hr style="width: 100%; border: 1px solid #444;">
@@ -45,22 +43,30 @@
     </div>
 
     <script type="module">
-        const { HandLandmarker, FilesetResolver } = window;
-        
-        let handLandmarker = undefined;
-        let runningMode = "VIDEO";
-        let webcamRunning = false;
-        let isRecording = false;
+        import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs";
         
         const video = document.getElementById("video");
         const recordBtn = document.getElementById("recordBtn");
         const saveBtn = document.getElementById("saveBtn");
         const labelSelect = document.getElementById("labelSelect");
         const statusEl = document.getElementById("status");
-
+        
+        let handLandmarker = undefined;
+        let runningMode = "VIDEO";
+        let isRecording = false;
         let dataset = [];
 
-        // Normalization utility (copied from landmarkPreprocess.js)
+        // --- ERROR LOGGING ---
+        const logError = (msg) => {
+            const errDiv = document.createElement("div");
+            errDiv.style.color = "red";
+            errDiv.style.marginTop = "10px";
+            errDiv.innerText = "Error: " + msg;
+            document.querySelector(".controls").appendChild(errDiv);
+            console.error(msg);
+        };
+
+        // Normalization utility
         const preprocessLandmarks = (landmarks) => {
             const wrist = landmarks[0];
             let normalized = landmarks.map(lm => ({ x: lm.x - wrist.x, y: lm.y - wrist.y, z: lm.z - wrist.z }));
@@ -74,23 +80,34 @@
 
         // Initialize MediaPipe
         async function initializeMediaPipe() {
-            const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
-            handLandmarker = await HandLandmarker.createFromOptions(vision, {
-                baseOptions: {
-                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-                    delegate: "GPU"
-                },
-                runningMode: runningMode,
-                numHands: 1
-            });
-            console.log("MediaPipe initialized");
-            startCamera();
+            try {
+                statusEl.innerText = "Loading MediaPipe AI Model (Please wait...)";
+                const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+                handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+                        delegate: "GPU"
+                    },
+                    runningMode: runningMode,
+                    numHands: 1
+                });
+                statusEl.innerText = "Model Loaded. Starting Camera...";
+                startCamera();
+            } catch (err) {
+                logError("MediaPipe failed to load: " + err.message);
+                statusEl.innerText = "Failed to load.";
+            }
         }
 
         async function startCamera() {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = stream;
-            video.addEventListener("loadeddata", predictWebcam);
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                video.addEventListener("loadeddata", predictWebcam);
+                statusEl.innerText = "Camera Active. Frames Recorded: 0";
+            } catch (err) {
+                logError("Camera access denied or unavailable: " + err.message);
+            }
         }
 
         let lastVideoTime = -1;
@@ -110,16 +127,86 @@
             window.requestAnimationFrame(predictWebcam);
         }
 
-        recordBtn.addEventListener("mousedown", () => { isRecording = true; recordBtn.innerText = "Recording..."; });
-        recordBtn.addEventListener("mouseup", () => { isRecording = false; recordBtn.innerText = "Hold to Record"; });
-        recordBtn.addEventListener("mouseleave", () => { isRecording = false; recordBtn.innerText = "Hold to Record"; });
+        recordBtn.addEventListener("click", () => { 
+            isRecording = !isRecording; 
+            if (isRecording) {
+                recordBtn.innerText = "Stop Recording..."; 
+                recordBtn.style.background = "#d32f2f"; // red
+            } else {
+                recordBtn.innerText = "Start Recording"; 
+                recordBtn.style.background = "#1976d2"; // blue
+            }
+        });
 
         saveBtn.addEventListener("click", () => {
+            if (dataset.length === 0) {
+                alert("No frames recorded yet!");
+                return;
+            }
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataset));
             const dlAnchorElem = document.createElement('a');
             dlAnchorElem.setAttribute("href", dataStr);
             dlAnchorElem.setAttribute("download", "gesture_dataset.json");
             dlAnchorElem.click();
+        });
+
+        // --- ADDED IN-BROWSER TRAINING TO BYPASS NODE.JS ERRORS ---
+        const trainBtn = document.createElement("button");
+        trainBtn.innerText = "Train & Download Model";
+        trainBtn.style.background = "#9c27b0"; // purple
+        trainBtn.style.color = "white";
+        trainBtn.style.padding = "10px";
+        trainBtn.style.fontSize = "16px";
+        trainBtn.style.fontWeight = "bold";
+        trainBtn.style.cursor = "pointer";
+        trainBtn.style.border = "none";
+        trainBtn.style.borderRadius = "5px";
+        document.querySelector(".controls").appendChild(trainBtn);
+
+        trainBtn.addEventListener("click", async () => {
+            if (dataset.length === 0) {
+                alert("Record data first!");
+                return;
+            }
+            
+            // Load TensorFlow.js dynamically
+            statusEl.innerText = "Loading TensorFlow.js for training...";
+            const script = document.createElement("script");
+            script.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest";
+            document.head.appendChild(script);
+            
+            script.onload = async () => {
+                statusEl.innerText = "Building Neural Network...";
+                const tf = window.tf;
+                
+                const LABELS = ['hello', 'yes', 'no', 'thank_you', 'help', 'stop', 'okay', 'sorry'];
+                const xs = tf.tensor2d(dataset.map(item => item.features));
+                const ys = tf.tensor1d(dataset.map(item => LABELS.indexOf(item.label)), 'int32');
+                const ysOneHot = tf.oneHot(ys, LABELS.length);
+
+                const model = tf.sequential();
+                model.add(tf.layers.dense({ units: 128, activation: 'relu', inputShape: [63] }));
+                model.add(tf.layers.dropout({ rate: 0.2 }));
+                model.add(tf.layers.dense({ units: 64, activation: 'relu' }));
+                model.add(tf.layers.dense({ units: LABELS.length, activation: 'softmax' }));
+
+                model.compile({ optimizer: 'adam', loss: 'categoricalCrossentropy', metrics: ['accuracy'] });
+
+                statusEl.innerText = "Training Model... (Check DevTools Console)";
+                await model.fit(xs, ysOneHot, {
+                    epochs: 50,
+                    validationSplit: 0.2,
+                    callbacks: {
+                        onEpochEnd: (epoch, logs) => {
+                            statusEl.innerText = `Training... Epoch ${epoch + 1}: Accuracy ${(logs.acc * 100).toFixed(1)}%`;
+                        }
+                    }
+                });
+
+                statusEl.innerText = "Training Complete! Downloading model files...";
+                await model.save('downloads://model');
+                statusEl.innerText = "Model Downloaded! Move the two files to FRONTEND/public/model/";
+            };
         });
 
         initializeMediaPipe();
