@@ -4,6 +4,15 @@ A full-stack, AI-powered premium video meeting application built with React, Nod
 
 > Built as an accessibility-first real-time collaboration platform with a separate Vite frontend, Node.js backend, and isolated ML training pipeline.
 
+## Preview
+
+![Landing Page](./Landing_Page.png)
+
+<div align="center">
+  <img src="./MeetingCreationPage.png" width="49%" alt="Home Dashboard" />
+  <img src="./InMeetPage.png" width="49%" alt="Video Meeting Room" />
+</div>
+
 ## Features
 
 - **AI Sign Language Translation (New!):** Fully local, privacy-first AI pipeline that tracks 21 hand landmarks using MediaPipe, processes them through a custom TensorFlow.js neural network, and translates sign language into text broadcasts in real-time. Includes temporal smoothing (debouncing) for high accuracy.
