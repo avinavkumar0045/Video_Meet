@@ -1,57 +1,54 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
-import '../App.css' //react mein CSS ki files overwrite ho jati jai
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import styles from '../styles/landing.module.css';
 
 export default function LandingPage() {
-     
     const router = useNavigate();
 
-  return (
-    <div className='landingPageContainer'>
-        {/* navbar */}
-        <nav>
-            <div className='navHeader'>
-                <h2 onClick={() => router("/")} style={{ cursor: "pointer" }}>
-                    <span style={{color:'#FF9933'}}>Mann </span>
-                    <span style={{color:'#FFFFFF'}}>Ki </span> 
-                    <span style={{color:'#138808'}}>Baat</span>  
-                </h2>
+    return (
+        <div className={styles.container}>
+            {/* Abstract Background Glows */}
+            <div className={styles.heroBackground}>
+                <div className={styles.glowBlue}></div>
+                <div className={styles.glowPurple}></div>
             </div>
 
-            <div className='navlist'>
-                <p onClick={() =>{
-                    router("/asdw2s");
-                }}>Join as Guest</p>
+            {/* Navbar */}
+            <nav className={styles.nav}>
+                <div className={styles.logo} onClick={() => router("/")} style={{cursor: "pointer"}}>
+                    <span style={{ color: '#FF9933' }}>Mann </span>
+                    <span style={{ color: '#FFFFFF' }}>Ki </span>
+                    <span style={{ color: '#138808' }}>Baat</span>
+                </div>
+
+                <div className={styles.navActions}>
+                    <button className={styles.btnText} onClick={() => router("/auth")}>Sign In</button>
+                    <button className="btn-secondary" onClick={() => router("/auth")}>Register</button>
+                </div>
+            </nav>
+
+            {/* Hero Section */}
+            <main className={styles.mainContent}>
+                <h1 className={styles.heroTitle}>
+                    <span className={styles.logoWhite}>Meaningful </span>
+                    <span className="text-gradient">Conversations<br/></span>
+                    <span className={styles.logoWhite}>Bring Us Closer</span>
+                </h1>
                 
-                <p  onClick={ () =>{
-                    router("/auth")
-                }}>Register</p>
+                <p className={styles.heroSubtitle}>
+                    High-quality, secure and easy-to-use<br/>
+                    video meetings for everyone.
+                </p>
 
-                <div onClick={ () =>{
-                    router("/auth")
-                }} role='button'>
-                    <p className='login'>LOGIN</p>
+                <div className={styles.ctaGroup}>
+                    <button className="btn-primary" onClick={() => router("/auth")}>
+                        Get Started →
+                    </button>
+                    <button className="btn-secondary" onClick={() => router("/asdw2s")}>
+                        Join as Guest
+                    </button>
                 </div>
-
-            </div>
-        </nav>
-        {/* main section */}
-        <div className='landingMainContainer'>
-            <div>
-                <h1><span style={{color:'#000080'}}>ReConnect </span> with your <br></br> Loved Ones</h1>
-                <br></br>
-                <p>Cover a distance by Mann Ki Gatti</p>
-                <div role='button' className="btn btn-success">
-                    <Link to={"/auth"}>Get Started</Link>
-                </div>
-            </div>
-
-            <div>
-                <img src='/funny.png' alt=''/>
-            </div>
-
+            </main>
         </div>
-
-    </div>
-  )
+    );
 }

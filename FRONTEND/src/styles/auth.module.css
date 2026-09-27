@@ -1,0 +1,162 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+}
+
+.heroBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.glowBlue {
+  position: absolute;
+  top: 20%;
+  left: 20%;
+  width: 500px;
+  height: 500px;
+  background: var(--brand-blue);
+  filter: blur(160px);
+  opacity: 0.12;
+  border-radius: 50%;
+}
+
+.glowPurple {
+  position: absolute;
+  bottom: 20%;
+  right: 20%;
+  width: 400px;
+  height: 400px;
+  background: var(--brand-purple);
+  filter: blur(160px);
+  opacity: 0.12;
+  border-radius: 50%;
+}
+
+.authCard {
+  width: 100%;
+  max-width: 440px;
+  position: relative;
+  z-index: 10;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 12px;
+}
+
+.logoWhite {
+  color: var(--text-primary);
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.input {
+  width: 100%;
+  height: 52px;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: 0 16px;
+  color: var(--text-primary);
+  font-size: 15px;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 3px rgba(79,124,255,0.12);
+}
+
+.passwordWrapper {
+  position: relative;
+}
+
+.eyeButton {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eyeButton:hover {
+  color: var(--text-secondary);
+}
+
+.submitBtn {
+  width: 100%;
+  margin-top: 12px;
+  margin-bottom: 24px;
+}
+
+.toggleAuth {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.link {
+  color: var(--brand-blue-light);
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.link:hover {
+  color: var(--brand-blue);
+  text-decoration: underline;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 14px;
+  margin-bottom: 16px;
+  text-align: center;
+}
