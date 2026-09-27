@@ -1,0 +1,62 @@
+/* Design System Tokens for Mann Ki Baat */
+:root {
+  /* BACKGROUND COLORS */
+  --bg-primary: #050A14;
+  --bg-secondary: #0A0F19;
+  --bg-tertiary: #101724;
+  
+  /* SURFACE & CARD COLORS */
+  --surface-primary: #0D1421;
+  --surface-secondary: #111A29;
+  --surface-tertiary: #162033;
+  --card-bg: rgba(17, 25, 40, 0.72);
+  --card-bg-solid: #111927;
+  --card-hover: #162238;
+  
+  /* BORDER COLORS */
+  --border-primary: #243149;
+  --border-secondary: #1B2638;
+  --border-subtle: rgba(255,255,255,0.08);
+  --border-blue: #3B82F6;
+  
+  /* TEXT */
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-tertiary: #94A3B8;
+  --text-muted: #64748B;
+  
+  /* BRAND COLORS */
+  --brand-blue: #4F7CFF;
+  --brand-blue-light: #60A5FA;
+  --brand-purple: #7C5CFF;
+  --brand-purple-light: #8B7CFF;
+  --brand-green: #35E878;
+  --brand-green-dark: #20C866;
+  
+  /* STATUS COLORS */
+  --success: #35E878;
+  --warning: #FBBF24;
+  --danger: #FF4D4D;
+  --info: #60A5FA;
+  
+  /* GRADIENTS */
+  --gradient-brand: linear-gradient(135deg, #4F7CFF 0%, #7C5CFF 100%);
+  --gradient-success: linear-gradient(135deg, #35E878, #20C866);
+  
+  /* BORDER RADIUS */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 9999px;
+  
+  /* SHADOWS & GLOWS */
+  --shadow-card: 0 10px 30px rgba(0,0,0,0.20);
+  --shadow-floating: 0 20px 60px rgba(0,0,0,0.45);
+  --glow-blue: 0 0 40px rgba(79,124,255,0.20);
+  --glow-purple: 0 0 50px rgba(124,92,255,0.20);
+  --glow-green: 0 0 30px rgba(53,232,120,0.20);
+
+  /* TRANSITIONS */
+  --transition-fast: 180ms ease;
+}
